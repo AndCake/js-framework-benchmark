@@ -1,0 +1,139 @@
+<app>
+	<div class='container'>
+		<div class='jumbotron'>
+			<div class='row'>
+				<div class='col-md-6'>
+					<h1>Zino v2.1.1</h1>
+				</div>
+				<div class='col-md-6'>
+					<div class='row'>
+						<div class='col-sm-6 smallpad'>
+							<button type='button' class='btn btn-primary btn-block' id='run'>
+								Create 1,000 rows
+							</button>
+						</div>
+						<div class='col-sm-6 smallpad'>
+							<button type='button' class='btn btn-primary btn-block' id='runlots'>Create 10,000 rows
+							</button>
+						</div>
+						<div class='col-sm-6 smallpad'>
+							<button type='button' class='btn btn-primary btn-block' id='add'>
+								Append 1,000 rows
+							</button>
+						</div>
+						<div class='col-sm-6 smallpad'>
+							<button type='button' class='btn btn-primary btn-block' id='update'>Update every 10th row
+							</button>
+						</div>
+						<div class='col-sm-6 smallpad'>
+							<button type='button' class='btn btn-primary btn-block' id='clear'>
+								Clear
+							</button>
+						</div>
+						<div class='col-sm-6 smallpad'>
+							<button type='button' class='btn btn-primary btn-block' id="swaprows">
+								Swap Rows
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<table class='table table-hover table-striped test-data'>
+			<tbody>
+				{{#props.rows}}
+				<tr class='{{selected}}' no-reorder data-idx="{{.index}}" data-id="{{id}}">
+					<td class='col-md-1'>{{id}}</td>
+					<td class='col-md-4'>
+						<a class="selector">{{label}}</a>
+					</td>
+					<td class='col-md-1'>
+						<a class="remover"><span class='glyphicon glyphicon-remove' aria-hidden='true'></span></a>
+					</td>
+					<td class='col-md-6'></td>
+				</tr>
+				{{/props.rows}}
+			</tbody>
+		</table>
+		<span class='preloadicon glyphicon glyphicon-remove' aria-hidden='true'></span>
+	</div>
+	<script>
+		({
+			props: {
+				rows: [],
+				rand: 0
+			},
+			events: {
+				'#run': {click: function run(e) {
+					startMeasure('run');
+					store.run();
+					requestAnimationFrame(stopMeasure)
+				}},
+				'#runlots': {click: function runLots(e) {
+					startMeasure('runLots');
+					store.runLots();
+					requestAnimationFrame(stopMeasure)
+				}},
+				'#add': {click: function add(e) {
+					startMeasure('add');
+					store.add();
+					requestAnimationFrame(stopMeasure)
+				}},
+				'#update': {click: function update(e) {
+					startMeasure('update');
+					store.update();
+					stopMeasure();
+				}},
+				'#clear': {click: function clear(e) {
+					startMeasure('clear');
+					store.clear();
+					stopMeasure();
+				}},
+				'#swaprows': {click: function swapRows(e) {
+					startMeasure('swapRows');
+					store.swapRows();
+					stopMeasure();
+				}},
+				'.selector': {click: function select(e) {
+					startMeasure('select');
+					var idx = parseInt(this.parentNode.parentNode.getAttribute('data-idx'), 10);
+					this.parentNode.parentNode.parentNode.children[this.getHost().props.selected || 0].className = '';
+					this.parentNode.parentNode.className = 'danger';
+					this.getHost().props.selected = idx;
+					store.select(idx);
+					stopMeasure();
+				}},
+				'.remover': {click: function remove(e) {
+					startMeasure('remove');
+					var idx = parseInt(this.parentNode.parentNode.getAttribute('data-idx'), 10);
+					store.delete(idx);
+					stopMeasure();
+				}}
+			},
+			mount: function() {
+				var me = this;
+				Zino.on('data-changed', function appChangeListener(rows) {
+					var domRows = me.getHost().querySelectorAll('tr[data-idx]');
+					if (rows.length === 0 || rows.length > domRows.length) {
+						me.setProps('rows', [].concat(rows));
+						return;
+					}
+					for (var i = 0, len = domRows.length; i < len; i += 1) {
+						var tr = domRows[i],
+							row = rows[i];
+						if (row && (row.label !== me.props.rows[i].label || row.id !== me.props.rows[i].id)) {
+							tr.setAttribute('data-idx', i);
+							tr.setAttribute('data-id', row.id);
+							tr.children[0].innerHTML = row.id;
+							tr.children[1].children[0].innerHTML = row.label;
+							me.props.rows[i] = row;
+						} else if (!row) {
+							tr.parentNode.removeChild(tr);
+							me.props.rows.splice(i, 1);
+						}
+					}
+				});
+			}
+		})
+	</script>
+</app>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <title>zino v2.2.5</title>
+ <link href="/css/currentStyle.css" rel="stylesheet"/>
+ <link rel="zino-tag" href="src/app.html"/>
+</head>
+<body>
+ <app></app>
+<script>
+var startTime
+var lastMeasure
+var startMeasure = function(name) {
+  startTime = performance.now()
+  lastMeasure = name
+}
+var stopMeasure = function() {
+  var last = lastMeasure
+  if (lastMeasure) {
+    requestAnimationFrame(function () {
+      lastMeasure = null
+      var stop = performance.now()
+      console.log(last+' took '+(stop-startTime))
+    });
+  }
+}
+</script>
+<script src='node_modules/zino/zino.min.js'></script>
+<script src='src/store.js'></script>
+</body>
+</html>

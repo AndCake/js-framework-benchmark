@@ -1,0 +1,10 @@
+{
+  "name": "zino-benchmark",
+  "scripts": {
+    "build-dev": "echo 'Nothing to do'",
+    "build-prod": "echo 'Nothing to do'"
+  },
+  "dependencies": {
+    "zino": "^2.3.0"
+  }
+}

@@ -1,0 +1,149 @@
+<app>
+  <div class='container'>
+    <div class='jumbotron'>
+      <div class='row'>
+        <div class='col-md-6'>
+          <h1>ZinoJS v2.2.5</h1>
+        </div>
+        <div class='col-md-6'>
+          <div class='row'>
+            <div class='col-sm-6 smallpad'>
+              <button type='button' class='btn btn-primary btn-block' id='run'>
+                Create 1,000 rows
+              </button>
+            </div>
+            <div class='col-sm-6 smallpad'>
+              <button type='button' class='btn btn-primary btn-block' id='runlots'>Create 10,000 rows
+              </button>
+            </div>
+            <div class='col-sm-6 smallpad'>
+              <button type='button' class='btn btn-primary btn-block' id='add'>
+                Append 1,000 rows
+              </button>
+            </div>
+            <div class='col-sm-6 smallpad'>
+              <button type='button' class='btn btn-primary btn-block' id='update'>Update every 10th row
+              </button>
+            </div>
+            <div class='col-sm-6 smallpad'>
+              <button type='button' class='btn btn-primary btn-block' id='clear'>
+                Clear
+              </button>
+            </div>
+            <div class='col-sm-6 smallpad'>
+              <button type='button' class='btn btn-primary btn-block' id="swaprows">
+                Swap Rows
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <table class='table table-hover table-striped test-data'>
+      <tbody>
+        {{#props.rows}}
+        <tr class="{{selected}}" no-reorder data-idx="{{.index}}" data-id="{{id}}">
+          <td class='col-md-1'>{{id}}</td>
+          <td class='col-md-4'>
+            <a>{{label}}</a>
+          </td>
+          <td class='col-md-1'>
+            <a><span class='glyphicon glyphicon-remove' aria-hidden='true'></span></a>
+          </td>
+          <td class='col-md-6'></td>
+        </tr>
+        {{/props.rows}}
+      </tbody>
+    </table>
+    <span class='preloadicon glyphicon glyphicon-remove' aria-hidden='true'></span>
+  </div>
+<script>
+({
+  events: {
+    '#add': {click: function add() {
+      startMeasure('add');
+      store.add();
+      stopMeasure();
+    }},
+    '#run': {click: function run() {
+      startMeasure('run');
+      store.run();
+      stopMeasure();
+    }},
+    '#runlots': {click: function runLots() {
+      startMeasure('run');
+      store.runLots();
+      stopMeasure();
+    }},
+    '#update': {click: function update() {
+      startMeasure('update');
+      store.update();
+      stopMeasure();
+    }},
+    '#clear': {click: function clear() {
+      startMeasure('clear');
+      store.clear();
+      stopMeasure();
+    }},
+    '#swaprows': {click: function swapRows() {
+      startMeasure('swapRows');
+      store.swapRows();
+      stopMeasure();
+    }},
+    'table tr': {click: function select(e) {
+      startMeasure('select');
+      var props = this.getHost().props;
+      this.className = 'danger';
+      this.parentNode.children[props.selected].className = '';
+      props.selected = ~~this.dataset.idx;
+      stopMeasure();
+    }},
+    'table .glyphicon-remove': {click: function remove() {
+      startMeasure('remove');
+      let tr = this.parentNode.parentNode.parentNode;
+      delete this.getHost().props.rows[tr.getAttribute('data-idx')];
+      tr.parentNode.removeChild(tr);
+      stopMeasure();
+    }}
+  },
+
+  props: {
+    rows: [],
+    selected: 0
+  },
+
+  mount: function() {
+    Zino.on('rows-updated', function(data) {
+      var host = this.getHost();
+      if (['swapRows', 'add'].indexOf(data.action) < 0) {
+        host.setProps('rows', data.rows);
+      } else if (data.action === 'swapRows') {
+        var cloneA = host.getElementsByTagName('tr')[9].cloneNode(true);
+        var cloneB = host.getElementsByTagName('tr')[4];
+        var body = host.getElementsByTagName('tbody')[0];
+        body.replaceChild(cloneA, cloneB);
+        body.replaceChild(cloneB, body.children[9]);
+        host.props.rows = data.rows;
+      } else if (data.action === 'add') {
+        var body = host.getElementsByTagName('tbody')[0];
+        var start = host.props.rows.length;
+        if (start < data.rows.length - start) {
+          host.setProps('rows', data.rows);
+        } else {
+          for (var i = 0, len = data.rows.length - start; i < len; i += 1) {
+            var tr = body.children[i].cloneNode(true);
+            tr.setAttribute('data-idx', start + i);
+            tr.setAttribute('data-id', data.rows[start + i].id);
+            tr.children[0].innerText = data.rows[start + i].id;
+            tr.children[1].children[0].innerText = data.rows[start + i].label;
+            body.appendChild(tr);
+          }
+          host.props.rows = data.rows;
+        }
+      }
+    }.bind(this));
+    Zino.trigger('initialize-rows');
+  }
+})
+</script>
+</app>
